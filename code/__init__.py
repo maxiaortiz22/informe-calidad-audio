@@ -6,3 +6,4 @@ from .test_respuesta_en_frecuencia import *
 from .test_ruido import *
 from .informe import *
 from .audio_tests import *
+from .test_warble_tone import *

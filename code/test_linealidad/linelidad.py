@@ -5,7 +5,7 @@ from scipy.fft import rfft, rfftfreq
 
 #Recomendable: calibrar los tonos a 65 dBHL
 
-def get_compensacion(transductor: list) -> list:
+def get_compensation(transductor: str) -> list:
     if transductor == 'Supraural (ej: JBL600)':
         return [45, 27, 13.5, 9, 7.5, 7.5, 9, 11.5, 12, 16, 15.5]
     elif transductor == "Circumaural (ej: JBL750)":
@@ -15,7 +15,7 @@ def get_compensacion(transductor: list) -> list:
     else:
         raise TypeError("No cargaste ningún transductor")
 
-def linealidad_aerea(cal, data, sr, auricular):
+def linealidad_aerea(cal: list[float], data: list[np.ndarray], sr: int, auricular: str) -> pd.DataFrame:
     """Esta función hace el cálculo de linealidad. Primero todo todo el audio grabado y lo
     separo por banda sabiendo cuánto dura la grabación de cada una. Después de eso hago todo el
     calculo de linealidad. Luego tengo que saber cuánto es el máximo y el mínimo de nivel medido
@@ -125,7 +125,7 @@ def linealidad_aerea(cal, data, sr, auricular):
 
     return test
 
-def linealidad_osea(cal, data, sr, auricular):
+def linealidad_osea(cal: list[float], data: list[np.ndarray], sr: int) -> pd.DataFrame:
     """Esta función hace el cálculo de linealidad. Primero todo todo el audio grabado y lo
     separo por banda sabiendo cuánto dura la grabación de cada una. Después de eso hago todo el
     calculo de linealidad. Luego tengo que saber cuánto es el máximo y el mínimo de nivel medido
@@ -137,7 +137,7 @@ def linealidad_osea(cal, data, sr, auricular):
     audios = {}
     
     i=0
-    recorte = int(11*2*sr) #[pasos][segundos_grabacion][sr] = [muestras_por_frecuencia] no sera 12?
+    recorte = int(9*2*sr) #[pasos][segundos_grabacion][sr] = [muestras_por_frecuencia] 
     for cal_i, f in enumerate(frec):
         #Separo la data por frecuencia y los calibro a dBSPL:
         audios[str(f)] = data[int(i) : int(i + recorte)] / cal[cal_i] #calibration

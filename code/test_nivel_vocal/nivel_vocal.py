@@ -1,7 +1,9 @@
 import numpy as np
-import pandas as pd
 
-def get_nivel_vocal(data: list, cal: float) -> pd.DataFrame:
-    """Dada una lista con las grabaciones, calcular el nivel vocal del archivo."""
+def get_nivel_vocal(data: list[np.ndarray], cal: float) -> list[float]:
+    """Dada una lista con las grabaciones, calcular el nivel vocal del archivo a 85,
+    80 y 70 dBHL."""
 
-    nivel_vocal = [record/cal for record in data] #Chequear que record sea un np.array
+    audios_calibrados = [record/cal for record in data] #Calibro los audios
+
+    return list(map(lambda x: np.sqrt(np.mean(x**2)), audios_calibrados)) #Calculo el nivel vocal

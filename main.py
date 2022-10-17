@@ -20,10 +20,10 @@ def record_data():
 
 if __name__ == '__main__':
 
-    linealidad.linealidad2()
-    linealidad.linealidad3()
+    #linealidad.linealidad2()
+    #linealidad.linealidad3()
 
-    pulse_tone.test()
+    #pulse_tone.test()
 
     global root
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     root = customtkinter.CTk()
     root.title("Informe de pruebas de audio")
-    root.geometry("330x580")
+    root.geometry("330x600")
     root.iconbitmap('logo.ico')
 
     recomendacion0 = customtkinter.CTkLabel(root, text='Seleccione el tipo de auricular:')
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     cal_low = customtkinter.CTkButton(root, text="Calibración", command=record_cal)
     cal_low.grid(row=5, column=0, pady=5, padx=50)
 
-    recomendacion1 = customtkinter.CTkLabel(root, text='')
+    recomendacion1 = customtkinter.CTkLabel(root, text='Pruebas:')
     recomendacion1.grid(row=6, column=0, pady=5, padx=50)
 
     record_linelidad_aerea = customtkinter.CTkButton(root, text="Linealidad aérea", command=record_data)
@@ -59,29 +59,32 @@ if __name__ == '__main__':
     record_tono_pulsante = customtkinter.CTkButton(root, text="Tono pulsante", command=record_data)
     record_tono_pulsante.grid(row=9, column=0, pady=5, padx=50)
 
+    record_warble_tone = customtkinter.CTkButton(root, text="Warble tone", command=record_data)
+    record_warble_tone.grid(row=10, column=0, pady=5, padx=50)
+
     record_nivel_vocal = customtkinter.CTkButton(root, text="Nivel vocal", command=record_data)
-    record_nivel_vocal.grid(row=10, column=0, pady=5, padx=50)
+    record_nivel_vocal.grid(row=11, column=0, pady=5, padx=50)
 
     record_ruido = customtkinter.CTkButton(root, text="Ruido", command=record_data)
-    record_ruido.grid(row=11, column=0, pady=5, padx=50)
+    record_ruido.grid(row=12, column=0, pady=5, padx=50)
 
     global progress_label
     progress_label = StringVar()
     progress_label.set("")
     recomendacion2 = customtkinter.CTkLabel(root, textvariable=progress_label)
-    recomendacion2.grid(row=12, column=0, pady=5, padx=50)
+    recomendacion2.grid(row=13, column=0, pady=5, padx=50)
 
     progress = customtkinter.CTkProgressBar(root)
-    progress.grid(row=13, column=0, pady=5, padx=50)
+    progress.grid(row=14, column=0, pady=5, padx=50)
     progress.set(0)
 
     file_name_recomendacion = customtkinter.CTkLabel(root, text='Nombre del informe:')
-    file_name_recomendacion.grid(row=14, column=0, pady=5, padx=50)
+    file_name_recomendacion.grid(row=15, column=0, pady=5, padx=50)
 
     file_name_entry = customtkinter.CTkEntry(root, justify=LEFT, textvariable='Nombre del informe')
-    file_name_entry.grid(row=15, column=0, pady=5, padx=50)
+    file_name_entry.grid(row=16, column=0, pady=5, padx=50)
 
     calculate = customtkinter.CTkButton(root, text="Calcular", command=calcular)
-    calculate.grid(row=16, column=0, pady=5, padx=50)
+    calculate.grid(row=17, column=0, pady=5, padx=50)
 
     root.mainloop()
