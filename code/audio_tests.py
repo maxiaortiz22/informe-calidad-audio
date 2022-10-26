@@ -9,6 +9,7 @@ from .test_pulse_tone import pulse_tone
 from .test_respuesta_en_frecuencia import rta_frec
 from .test_ruido import ruido
 from .test_warble_tone import warble_tone
+from .test_nivel_vocal import nivel_vocal
 import time
 
 class Tests():
@@ -159,6 +160,7 @@ class Tests():
 
     def get_rta_frec(self):
         #Ver cómo realizar el cambio de la placa al ears!!!
+        #https://python-sounddevice.readthedocs.io/en/0.3.7/#:~:text=On%20a%20GNU,in%2C%2016%20out)
 
         print('Grabando data:')
 
@@ -203,6 +205,28 @@ class Tests():
             time.sleep(5)
         
         result = warble_tone.get_frec_mod(data, self.sr)
+
+        return result
+    
+    def get_nivel_vocal(self):
+        
+        record_seconds = 40
+        data = []
+
+        listas =['Dr. Tato adultos', 'Dr. Tato niños', "SRT E IRF (masculino)", 
+                 'SRT E IRF (femenino)', 'Audicom']
+
+        for lista in listas:
+            print(f'Esperando: lista {lista} Hz a 85 dBHL')
+            data_aux = self.record(RECORD_SECONDS=record_seconds, CHANNELS=1)
+            
+            print('Lista grabada!')
+            
+            data.append(data_aux)
+
+            time.sleep(30)
+        
+        result = nivel_vocal.get_nivel_vocal(data, self.cal[4])
 
         return result
 
