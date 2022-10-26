@@ -7,7 +7,6 @@
 #from code.record_audio import *
 
 
-from matplotlib import test
 import code.audio_tests as audio_tests
 import customtkinter
 from tkinter import *
