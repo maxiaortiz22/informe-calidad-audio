@@ -1,10 +1,10 @@
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import numpy as np
-import soundfile as sf
 import sounddevice as sd
 import time
 from scipy.fft import rfft, rfftfreq
+from scipy.signal import fftconvolve
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 
@@ -13,7 +13,7 @@ def sinesweep(f_inf: int = 20,
               T: int = 5, 
               Fs: int = 44100, 
               A: float = 1.0, 
-              P: int = 3) -> tuple[np.ndarray, np.ndarray, int, int, int]:
+              P: int = 1) -> tuple[np.ndarray, np.ndarray, int, int, int]:
     
     """Función para generar el sinesweep dada una frecuencia mínima y máxima, una duración T en segundos,
     una frecuencia de sampleo, amplitud de la señal y cantidad de repeticiones para realizar el promedio.
@@ -35,15 +35,11 @@ def sinesweep(f_inf: int = 20,
     K = (T*w1)/(np.log(w2/w1))
     L = T/(np.log(w2/w1))
 
-    theta = np.zeros(len(t))
-    x_t = np.zeros(len(t))
-
-    for i in range(len(t)):
-        theta[i] = K*(np.exp(t[i]/L)-1)
-        x_t[i] = np.sin(theta[i])  # sinesweep
+    theta = np.array([K*(np.exp(t[i]/L)-1) for i in range(len(t))])
+    x_t = np.array([np.sin(theta[i]) for i in range(len(t))]) # sinesweep
 
     x_tp = []
-    for p in range(P):
+    for _ in range(P):
         for i in range(len(x_t)):
             x_tp.append(x_t[i])  # concateno los sweeps
 
@@ -115,30 +111,50 @@ def rta(sinesweep_data: np.ndarray,
 
     #Obtengo la transformada de Fourier para cada uno y hago el promedio:
     samples = int(T*Fs)
-    left_f_aux = np.zeros(int(len(np.abs(rfft(left[0:samples])))))
-    right_f_aux = np.zeros(int(len(np.abs(rfft(right[0:samples])))))
+    left_aux = np.zeros(int(2*len(left[0:samples])-1))
+    right_aux = np.zeros(int(2*len(right[0:samples])-1))
 
     for i in range(P):
         #fft del lado derecho:
-        filtro_inverso_f = rfft(filtro_inverso[int(samples*i):int(samples*(i+1))])
-        left_f = rfft(left[int(samples*i):int(samples*(i+1))])
-        right_f = rfft(right[int(samples*i):int(samples*(i+1))])
+        #filtro_inverso_f = rfft(filtro_inverso[int(samples*i):int(samples*(i+1))])
+        #left_f = rfft(left[int(samples*i):int(samples*(i+1))])
+        #right_f = rfft(right[int(samples*i):int(samples*(i+1))])
 
         #Convoluciono señal con filtro inverso para obtener la IR en frecuencia:
-        left_f = np.abs(left_f*filtro_inverso_f)
-        right_f = np.abs(right_f*filtro_inverso_f)
+        #left_f = np.abs(np.array(left_f)*np.array(filtro_inverso_f))
+        #right_f = np.abs(np.array(right_f)*np.array(filtro_inverso_f))
 
         #Paso a dB:
-        left_F = 20*np.log10(abs(left_f) / (20*np.power(10, 1/6)))
-        right_F = 20*np.log10(abs(right_f) / (20*np.power(10, 1/6)))
+        #left_F = 20*np.log10(abs(left_f) / (20*np.power(10, 1/6)))
+        #right_F = 20*np.log10(abs(right_f) / (20*np.power(10, 1/6)))
 
         #Sumo todas para luego hacer el promedio:
-        left_f_aux = left_f_aux + left_F
-        right_f_aux = right_f_aux + right_F
+        #left_f_aux = left_f_aux + left_F
+        #right_f_aux = right_f_aux + right_F
+
+        cut_left = fftconvolve(filtro_inverso[int(samples*i):int(samples*(i+1))], 
+                               left[int(samples*i):int(samples*(i+1))])
+
+        cut_right = fftconvolve(filtro_inverso[int(samples*i):int(samples*(i+1))], 
+                                right[int(samples*i):int(samples*(i+1))])
+
+        #Sumo todas para luego hacer el promedio:
+        left_aux = left_aux + cut_left
+        right_aux = right_aux + cut_right
     
     #Saco el promedio de las mediciones:
-    left_IR = left_f_aux / P
-    right_IR = right_f_aux / P
+    left_IR = left_aux / P
+    right_IR = right_aux / P
+
+    i_left = int(np.where(abs(left_IR) == np.max(abs(left_IR)))[0])
+    i_right = int(np.where(abs(right_IR) == np.max(abs(right_IR)))[0])
+
+    left_IR = left_IR[i_left:]
+    right_IR = right_IR[i_right:]
+
+    #Paso a dB:
+    left_IR = 20*np.log10(abs(left_IR) / (20*np.power(10, 1/6)))
+    right_IR = 20*np.log10(abs(right_IR) / (20*np.power(10, 1/6)))
 
     #Vector de frecuencias:
     N = int(T*Fs)
@@ -153,11 +169,18 @@ def get_rta_frec(f_inf: int = 20,
                  T: int = 5, 
                  Fs: int = 44100, 
                  A: float = 1.0, 
-                 P: int = 3) -> tuple[Figure, list[Axes]]:
+                 P: int = 1) -> None:
+
+    #https://stackoverflow.com/questions/43925337/matplotlib-returning-a-plot-object
 
     #Grabo y obtengo la data:
     sinesweep_data, filtro_inverso, T, Fs, P = sinesweep(f_inf, f_sup, T, Fs, A, P)
     left_F_1, right_F_1, f = rta(sinesweep_data, filtro_inverso, T, Fs, P)
+
+    #Normalizo en 1000 Hz:
+    idx = np.where(f==1000)
+    left_F_1 = left_F_1 - left_F_1[idx]
+    right_F_1 = right_F_1 - right_F_1[idx]
 
     #Grafico la data:
     
@@ -173,7 +196,7 @@ def get_rta_frec(f_inf: int = 20,
     for axis in [axes[0].xaxis]:
         axis.set_major_formatter(ScalarFormatter())
     axes[0].set_ylabel('Izquierdo [dB]', fontsize=12, color='black')
-    axes[0].set_xlim([20, 20000])
+    axes[0].set_xlim(20, 20000)
     axes[0].set_xticks(ftick)
     axes[0].set_xticklabels(labels, rotation=90)
     axes[0].legend()
@@ -185,7 +208,7 @@ def get_rta_frec(f_inf: int = 20,
     for axis in [axes[1].xaxis]:
         axis.set_major_formatter(ScalarFormatter())
     axes[1].set_ylabel('Derecho [dB]', fontsize=12, color='black')
-    axes[1].set_xlim([20, 20000])
+    axes[1].set_xlim(20, 20000)
     axes[1].set_xticks(ftick)
     axes[1].set_xticklabels(labels, rotation=90)
     axes[1].legend()
@@ -193,5 +216,4 @@ def get_rta_frec(f_inf: int = 20,
 
     plt.tight_layout()
     plt.show()
-
-    return fig, axes
+    plt.savefig('test_images/rta_frec.png')

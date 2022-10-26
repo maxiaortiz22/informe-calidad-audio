@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 import pandas as pd
 import sys
@@ -5,17 +6,7 @@ from scipy.fft import rfft, rfftfreq
 
 #Recomendable: calibrar los tonos a 65 dBHL
 
-def get_compensation(transductor: str) -> list:
-    if transductor == 'Supraural (ej: JBL600)':
-        return [45, 27, 13.5, 9, 7.5, 7.5, 9, 11.5, 12, 16, 15.5]
-    elif transductor == "Circumaural (ej: JBL750)":
-        return [30.5, 18, 11, 6,  5.5, 5.5, 4.5, 2.5, 9.5, 17, 17.5]
-    elif transductor == 'vincha ósea':
-        return [8.4, 9.8, 11.2, 11.6, 13.5, 13.6, 16.3, 25]
-    else:
-        raise TypeError("No cargaste ningún transductor")
-
-def linealidad_aerea(cal: list[float], data: list[np.ndarray], sr: int, auricular: str) -> pd.DataFrame:
+def linealidad_aerea(cal: list[float], data: np.ndarray, sr: int, auricular: str) -> pd.DataFrame:
     """Esta función hace el cálculo de linealidad. Primero todo todo el audio grabado y lo
     separo por banda sabiendo cuánto dura la grabación de cada una. Después de eso hago todo el
     calculo de linealidad. Luego tengo que saber cuánto es el máximo y el mínimo de nivel medido
@@ -27,7 +18,7 @@ def linealidad_aerea(cal: list[float], data: list[np.ndarray], sr: int, auricula
     audios = {}
     
     i=0
-    recorte = int(11*2*sr) #[pasos][segundos_grabacion][sr] = [muestras_por_frecuencia] no sera 12?
+    recorte = int(9*2*sr) #[pasos][segundos_grabacion][sr] = [muestras_por_frecuencia] no sera 12?
     for cal_i, f in enumerate(frec):
         #Separo la data por frecuencia y los calibro a dBSPL:
         audios[str(f)] = data[int(i) : int(i + recorte)] / cal[cal_i] #calibration
@@ -66,7 +57,7 @@ def linealidad_aerea(cal: list[float], data: list[np.ndarray], sr: int, auricula
         N = len(trimm[key])
 
         # Note the extra 'r' at the front
-        yf = np.abs(rfft(trimm[key])) / (N/np.sqrt(2)) #Divido por N/raiz(2) para compensar la amplitud de la fft
+        yf = np.abs(np.array(rfft(trimm[key]))) / (N/np.sqrt(2)) #Divido por N/raiz(2) para compensar la amplitud de la fft
         xf = rfftfreq(N, 1 / sr)
 
         yf_db = 20*np.log10(yf / (20*10**(-6)) + sys.float_info.epsilon)
@@ -116,8 +107,8 @@ def linealidad_aerea(cal: list[float], data: list[np.ndarray], sr: int, auricula
         
         aux = []
 
-    INDEX = ['40 dBHL', '35 dBHL', '30 dBHL', '25 dBHL', "20 dBHL",
-             '15 dBHL', '10 dBHL', '5 dBHL' , '0 dBHL' , "-5 dBHL", "-10 dBHL"]
+    INDEX = ['60 dBHL', '55 dBHL', '50 dBHL', '45 dBHL', "40 dBHL",
+             '35 dBHL', '30 dBHL', '25 dBHL' , '20 dBHL']
 
     test = pd.DataFrame(data=trimm_global_dB_norm, index=INDEX)
 
@@ -125,7 +116,7 @@ def linealidad_aerea(cal: list[float], data: list[np.ndarray], sr: int, auricula
 
     return test
 
-def linealidad_osea(cal: list[float], data: list[np.ndarray], sr: int) -> pd.DataFrame:
+def linealidad_osea(cal: list[float], data: np.ndarray, sr: int) -> pd.DataFrame:
     """Esta función hace el cálculo de linealidad. Primero todo todo el audio grabado y lo
     separo por banda sabiendo cuánto dura la grabación de cada una. Después de eso hago todo el
     calculo de linealidad. Luego tengo que saber cuánto es el máximo y el mínimo de nivel medido
@@ -146,7 +137,7 @@ def linealidad_osea(cal: list[float], data: list[np.ndarray], sr: int) -> pd.Dat
     
     #Recorto los audios en partes de dos segundos
     i=0
-    trimm = {}
+    trimm: dict[str, np.ndarray] = {}
     for key in audios.keys():
         n_cut = round(len(audios[key])/(sr*2),0) #cantidad de cortes
         #print(n_cut)
@@ -173,7 +164,7 @@ def linealidad_osea(cal: list[float], data: list[np.ndarray], sr: int) -> pd.Dat
         N = len(trimm[key])
 
         # Note the extra 'r' at the front
-        yf = np.abs(rfft(trimm[key])) / (N/np.sqrt(2)) #Divido por N/raiz(2) para compensar la amplitud de la fft
+        yf = np.abs(np.array(rfft(trimm[key]))) / (N/np.sqrt(2)) #Divido por N/raiz(2) para compensar la amplitud de la fft
         xf = rfftfreq(N, 1 / sr)
 
         yf_db = 20*np.log10(yf / (20*10**(-6)) + sys.float_info.epsilon)

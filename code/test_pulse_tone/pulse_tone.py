@@ -1,149 +1,76 @@
-import sys
-# Agrego el path donde está el tone_generator al archivo:
-sys.path.append(r'C:\Users\maxia\OneDrive\Desktop\uSound\Código del audiómetro\audiometro-uSound\python-swig')
-import tone_generator
-""" Configuración:
-Tipos de tonos:
-tone_generator.AUDIOMETRY_TONE
-tone_generator.REPEATED_TONE       
-tone_generator.DEMO_TONE           
-tone_generator.USER_REPEATED_TONE  
-tone_generator.CONTINUOUS_TONE     
-tone_generator.PULSE_TONE_HALF_SEC 
-tone_generator.PULSE_TONE_ONE_SEC  
-tone_generator.MASKING_STIMULUS    
-tone_generator.WARBLE_TONE         
-tone_generator.LINEARITY_TEST
-
-Seteo de valores: 
-pToneGen->bypass: 0x0
-pToneGen->freq: 0x1
-pToneGen->gain: 0x2
-pToneGen->pan: 0x3 
-pToneGen->interval: 0x4 
-pToneGen->initGain: 0x5
-pToneGen->finalGain: 0x6
-pToneGen->gainChange: 0x7 
-pToneGen->gainThreshold: 0x8 
-pToneGen->toneType: 0x9
-pToneGen->pulseSamples: 0xA 
-pToneGen->intercomVolume: 0xB 
-"""
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import hilbert
+from scipy.signal import hilbert, find_peaks
 
-def tone(sr, frec, tone_type, gain, chanel, buffer):
-
-    tone_generator.tone_generator_free()
-
-    tone_generator.tone_generator_alloc(sr)
-    tone_generator.tone_generator_setValue(0x0, 0) #Saco el bypass!
-    tone_generator.tone_generator_setValue(0x1, frec) #Frecuencia en [Hz]
-    tone_generator.tone_generator_setValue(0x9, tone_type) #Tipo de tono
-    tone_generator.tone_generator_setValue(0x2, gain) #Ganancia en dBFS
-    tone_generator.tone_generator_setValue(0x3, chanel) #Canal de emisión
-
-    data = tone_generator.tone_generator_interval_process(buffer)
-    data = data.tolist()
-
-    # Me quedo solo con el canal elegido y elimino los 0:
-    tono = []
-    if chanel == 0x4: #Canal izquierdo
-        for i in range(0, len(data), 2):
-            tono.append(data[i])
-    elif chanel == 0x5: #Canal derecho
-        for i in range(1, len(data), 2):
-            tono.append(data[i])
-
-    tone_generator.tone_generator_free()
-
-    plt.plot(tono)
-    plt.show()
-
-    tono = np.abs(hilbert(tono))
-
-    plt.plot(tono)
-    plt.show()
-
-    return tono
-
-def test():
-    # Defino los parámetros:
-    sr = 48000 # Frecuencia de sampleo [Hz]
-    frec = 1000 # Frecuencia [Hz]
-    tone_type = tone_generator.PULSE_TONE_HALF_SEC # Tipo de tono
-    gain = 0 # Ganancia en dBFs
-    chanel = 0x4 # Canal izquierdo = 0x4, Canal derecho = 0x5
-    audio_seconds = 2 #Segundos de audio que quiero
-    buffer = int(sr*audio_seconds*2) #(frecuencia de sampleo)*(segundos de audio)*(canales)
-
+def get_pulse_tone(data: np.ndarray, sr: int) -> dict[str, float]:
     #Genero el test:
-    tono = tone(sr, frec, tone_type, gain, chanel, buffer)
 
+    data = data/np.max(np.abs(data))
 
+    tono = np.abs(hilbert(data))
 
-    tono = tono[int(0.35*sr):int(1.75*sr)]
+    DISTANCE = sr*192*(10**(-3)) #Espero que la distancia entre los picos sea mayor a 192ms (on-time del tono pulsante)
 
-    #df = pd.DataFrame({'Tono' : tono})
-    #df.to_csv('Tono pulsante.csv', index=False)
+    local_max_idx, _ = find_peaks(tono, height=0.5, distance=DISTANCE)
 
-    time = np.linspace(0.35, 1.75, num=int(sr*(1.75-0.35)))
+    #Recorto el tono en el segundo y tercer pulso:
+    first_max = local_max_idx[1]
+    second_max = local_max_idx[2]
 
-    min = np.min(np.abs(tono))
-    max = np.max(np.abs(tono))
+    end_left = np.where(np.flip(tono[:first_max])<=tono[first_max]*0.1)[0][0]
+    end_left = first_max - end_left
 
-    print(np.where(tono>=max*0.1))
+    end_right = np.where(tono[second_max:]<=tono[second_max]*0.1)[0][0]
+    end_right = second_max + end_right
 
-    rise_init = np.where(tono>=max*0.1)[0][0]
-    rise_end = np.where(tono>=max*0.9)[0][0]
+    tono = tono[(end_left-2000):(end_right+2000)]
 
-    #print(time[rise_init])
-    #print(time[rise_end])
+    #Busco los tiempos de los pulsos:
+    local_max_idx, _ = find_peaks(tono, height=0.5, distance=DISTANCE)
 
-    tono2 = tono[rise_end+10:-1]
+    first_max = local_max_idx[0]
+    second_max = local_max_idx[1]
 
-    fall_init = np.where(tono2<=max*0.9)[0][0]
-    fall_end = np.where(tono2<=max*0.1)[0][0]
-    middle_1 = np.where(tono2<=max*0.5)[0][0]
+    #Tiempos del primer ciclo:
+    first_rise_min_left = np.where(np.flip(tono[:first_max])<=tono[first_max]*0.1)[0][0]
+    first_rise_min_left = first_max - first_rise_min_left
+    
+    first_rise_max_left = np.where(np.flip(tono[:first_max])<=tono[first_max]*0.9)[0][0]
+    first_rise_max_left = first_max - first_rise_max_left
 
-    tono3 = tono[fall_end+10+rise_end+10:-1]
+    first_fall_min_left = np.where(tono[first_max:]<=tono[first_max]*0.1)[0][0]
+    first_fall_min_left = first_max + first_fall_min_left
 
-    middle_2 = np.where(tono3>=max*0.5)[0][0]
+    first_fall_middle_left = np.where(tono[first_max:]<=tono[first_max]*0.5)[0][0]
+    first_fall_middle_left = first_max + first_fall_middle_left
 
-    #print(fall_init)
-    #print(fall_end)
+    first_fall_max_left = np.where(tono[first_max:]<=tono[first_max]*0.9)[0][0]
+    first_fall_max_left = first_max + first_fall_max_left
 
-    print(f'Rise time: {(time[rise_end]-time[rise_init])*10**3} ms')
-    print(f'Fall time: {(time[fall_end]-time[fall_init])*10**3} ms')
-    print(f'On time: {(time[fall_init+rise_end+10]-time[rise_end])*10**3} ms')
-    print(f'Middle/Fall time: {(time[fall_end+rise_end+10]-time[middle_1+rise_end+10])*10**3} ms')
-    print(f'On/Off time: {(time[middle_2+fall_end+10+rise_end+10]-time[middle_1+rise_end+10])*10**3} ms')
+    #Tiempos del segundo ciclo:
+    second_rise_min_left = np.where(np.flip(tono[:second_max])<=tono[second_max]*0.1)[0][0]
+    second_rise_min_left = second_max - second_rise_min_left
+    
+    second_rise_middle_left = np.where(np.flip(tono[:second_max])<=tono[second_max]*0.5)[0][0]
+    second_rise_middle_left = second_max - second_rise_middle_left
 
+    print(f'Rise time: {((first_rise_max_left-first_rise_min_left)/sr)*10**3} ms')
+    print(f'Fall time: {((first_fall_min_left-first_fall_max_left)/sr)*10**3} ms')
+    print(f'On time: {((first_fall_max_left-first_rise_max_left)/sr)*10**3} ms')
+    print(f'On/Off time: {((second_rise_middle_left-first_fall_middle_left)/sr)*10**3} ms')
 
-    plt.plot(time, np.abs(tono))
+    times = {'Rise time': np.round(((first_rise_max_left-first_rise_min_left)/sr)*10**3, 2),
+             'Fall time': np.round(((first_fall_min_left-first_fall_max_left)/sr)*10**3, 2),
+             'On time': np.round(((first_fall_max_left-first_rise_max_left)/sr)*10**3, 2),
+             'On/Off time': np.round(((second_rise_middle_left-first_fall_middle_left)/sr)*10**3, 2)}
+    
+    plt.plot(tono)
+    
+    for idx in [first_rise_min_left, first_rise_max_left, first_fall_min_left, 
+                first_fall_middle_left, first_fall_max_left, second_rise_min_left, second_rise_middle_left]:
 
-    font = {'color':  'black',
-            'weight': 'normal',
-            'size': 8,
-            }
+        plt.vlines(x = idx, ymin = min(tono), ymax = max(tono), colors = 'purple')
 
-    plt.axvline(x = 0.35+rise_init/sr, color = 'r')
-    plt.axvline(x = 0.35+rise_end/sr, color = 'r')
-    plt.axvline(x = 0.35+(fall_init+rise_end+10)/sr, color = 'r')
-    plt.axvline(x = 0.35+(fall_end+rise_end+10)/sr, color = 'r')
-    plt.axvline(x = 0.35+(middle_2+fall_end+10+rise_end+10)/sr, color = 'y')
-    plt.axvline(x = 0.35+(middle_1+rise_end+10)/sr, color = 'g')
-    plt.text(1.6, 0.75, f"""Rise time: {np.round((time[rise_end]-time[rise_init])*10**3,1)} ms\n
-    Fall time: {np.round((time[fall_end]-time[fall_init])*10**3,1)} ms\n
-    On time: {np.round((time[fall_init+rise_end+10]-time[rise_end])*10**3,1)} ms\n
-    On/Off time: {np.round((time[middle_2+fall_end+10+rise_end+10]-time[middle_1+rise_end+10])*10**3,1)} ms""",
-            fontdict=font, ha="center", va="center",
-            bbox=dict(boxstyle="round",
-                    ec=(1., 0.5, 0.5),
-                    fc=(1., 0.8, 0.8),
-                    ))
+    plt.savefig('test_images/pulse_tone.png')
 
-    plt.xlabel('Tiempo [s]')
-    plt.ylabel('Amplitud')
-    plt.show()
+    return times

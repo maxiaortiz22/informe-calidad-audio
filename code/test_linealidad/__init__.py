@@ -1,1 +1,1 @@
-from .linelidad import *
+#__all__ = ['linealidad']

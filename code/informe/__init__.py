@@ -1,1 +1,1 @@
-from .informe import *
+#from .informe import *

@@ -1,13 +1,16 @@
-import code.test_linealidad.linelidad as linealidad
+#import code.test_linealidad.linelidad as linealidad
 #from code.test_nivel_vocal.nivel_vocal import 
-import code.test_pulse_tone.pulse_tone as pulse_tone
+#import code.test_pulse_tone.pulse_tone as pulse_tone
 #from code.test_respuesta_en_frecuencia.rta_frec import
 #from code.test_ruido.ruido import
 #from code.informe.informe import
-from code.record_audio import *
+#from code.record_audio import *
 
+
+import code.audio_tests as audio_tests
 import customtkinter
 from tkinter import *
+from code.informe import informe
 
 def calcular():
     pass
@@ -24,6 +27,7 @@ if __name__ == '__main__':
     #linealidad.linealidad3()
 
     #pulse_tone.test()
+
 
     global root
 
