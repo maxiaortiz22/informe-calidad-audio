@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import hilbert, find_peaks
+import pandas as pd
 
-def get_pulse_tone(data: np.ndarray, sr: int) -> dict[str, float]:
+def get_pulse_tone(data: np.ndarray, sr: int) -> pd.DataFrame:
     #Genero el test:
 
     data = data/np.max(np.abs(data))
@@ -59,11 +60,16 @@ def get_pulse_tone(data: np.ndarray, sr: int) -> dict[str, float]:
     print(f'On time: {((first_fall_max_left-first_rise_max_left)/sr)*10**3} ms')
     print(f'On/Off time: {((second_rise_middle_left-first_fall_middle_left)/sr)*10**3} ms')
 
-    times = {'Rise time': np.round(((first_rise_max_left-first_rise_min_left)/sr)*10**3, 2),
-             'Fall time': np.round(((first_fall_min_left-first_fall_max_left)/sr)*10**3, 2),
-             'On time': np.round(((first_fall_max_left-first_rise_max_left)/sr)*10**3, 2),
-             'On/Off time': np.round(((second_rise_middle_left-first_fall_middle_left)/sr)*10**3, 2)}
+    times = {'Rise time [ms]': np.round(((first_rise_max_left-first_rise_min_left)/sr)*10**3, 2),
+             'Fall time [ms]': np.round(((first_fall_min_left-first_fall_max_left)/sr)*10**3, 2),
+             'On time [ms]': np.round(((first_fall_max_left-first_rise_max_left)/sr)*10**3, 2),
+             'On/Off time [ms]': np.round(((second_rise_middle_left-first_fall_middle_left)/sr)*10**3, 2)}
     
+    data_ = {'Tiempos [ms]': ['Rise time', 'Fall time', 'On time', 'On/Off time'],
+             'Resultado': [times['Rise time [ms]'], times['Fall time [ms]'], times['On time [ms]'], times['On/Off time [ms]']]}
+    
+    plt.rcParams["figure.figsize"] = (5,3)
+
     plt.plot(tono)
     
     for idx in [first_rise_min_left, first_rise_max_left, first_fall_min_left, 
@@ -71,6 +77,8 @@ def get_pulse_tone(data: np.ndarray, sr: int) -> dict[str, float]:
 
         plt.vlines(x = idx, ymin = min(tono), ymax = max(tono), colors = 'purple')
 
-    plt.savefig('test_images/pulse_tone.png')
+    plt.savefig('results/test_images/pulse_tone.png')
 
-    return times
+    df = pd.DataFrame(data=data_)
+
+    return df

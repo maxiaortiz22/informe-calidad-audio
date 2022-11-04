@@ -2,6 +2,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 import numpy as np
 import sounddevice as sd
+import soundfile as sf
 import time
 from scipy.fft import rfft, rfftfreq
 from scipy.signal import fftconvolve
@@ -81,7 +82,7 @@ def rta(sinesweep_data: np.ndarray,
         filtro_inverso: np.ndarray, 
         T: int, 
         Fs: int, 
-        P: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        P: int) -> tuple[np.ndarray, np.ndarray]:
 
     """Función para emitir y grabar un sinesweep, con los sinesweep de entrada, sus filtros inversos,
     tiempo de duración de cada uno, frecuencia de sampleo y cantidad de sinesweeps para realizar el
@@ -97,7 +98,7 @@ def rta(sinesweep_data: np.ndarray,
 
     #print(sinesweep_play)
     myrecording = sd.playrec(sinesweep_data, Fs, channels=2)
-    time.sleep(T*P)
+    sd.wait()
 
     #sf.write('recording.wav', myrecording, Fs)
 
@@ -152,17 +153,20 @@ def rta(sinesweep_data: np.ndarray,
     left_IR = left_IR[i_left:]
     right_IR = right_IR[i_right:]
 
+    sf.write('rir_left.wav', left_IR, Fs)
+    sf.write('rir_right.wav', right_IR, Fs)
+
     #Paso a dB:
-    left_IR = 20*np.log10(abs(left_IR) / (20*np.power(10, 1/6)))
-    right_IR = 20*np.log10(abs(right_IR) / (20*np.power(10, 1/6)))
+    #left_IR = 20*np.log10(abs(left_IR) / (20*np.power(10, 1/6)))
+    #right_IR = 20*np.log10(abs(right_IR) / (20*np.power(10, 1/6)))
 
     #Vector de frecuencias:
-    N = int(T*Fs)
-    xf = rfftfreq(N, 1 / Fs)
+    #N = int(T*Fs)
+    #xf = rfftfreq(N, 1 / Fs)
 
     print('Fin Sinesweep')
 
-    return left_IR, right_IR, xf
+    return left_IR, right_IR #, xf
 
 def get_rta_frec(f_inf: int = 20, 
                  f_sup: int = 20000, 
@@ -175,12 +179,25 @@ def get_rta_frec(f_inf: int = 20,
 
     #Grabo y obtengo la data:
     sinesweep_data, filtro_inverso, T, Fs, P = sinesweep(f_inf, f_sup, T, Fs, A, P)
-    left_F_1, right_F_1, f = rta(sinesweep_data, filtro_inverso, T, Fs, P)
+    left_IR, right_IR = rta(sinesweep_data, filtro_inverso, T, Fs, P)
+
+    left_F = np.abs(np.array(rfft(left_IR)))
+    right_F = np.abs(np.array(rfft(right_IR)))
+
+    left_F = 20*np.log10(abs(left_F) / (20*np.power(10, 1/6)))
+    right_F = 20*np.log10(abs(right_F) / (20*np.power(10, 1/6)))
+
+    N_left = int(left_IR.size)
+    N_right = int(right_IR.size)
+    
+    f_left = rfftfreq(N_left, 1 / Fs)
+    f_right = rfftfreq(N_right, 1 / Fs)
 
     #Normalizo en 1000 Hz:
-    idx = np.where(f==1000)
-    left_F_1 = left_F_1 - left_F_1[idx]
-    right_F_1 = right_F_1 - right_F_1[idx]
+    idx_left = np.where(f_left>=1000)[0][0]
+    idx_right = np.where(f_right>=1000)[0][0]
+    left_F = left_F - left_F[idx_left]
+    right_F = right_F - right_F[idx_right]
 
     #Grafico la data:
     
@@ -190,7 +207,7 @@ def get_rta_frec(f_inf: int = 20,
     
     fig, axes = plt.subplots(2, 1)
 
-    axes[0].plot(f, left_F_1, label='Izquierdo', color='b')
+    axes[0].plot(f_left, left_F, label='Izquierdo', color='b')
     axes[0].set_xlabel('Frecuencia [Hz]', fontsize=12, color='black')
     axes[0].set_xscale('log')
     for axis in [axes[0].xaxis]:
@@ -202,7 +219,7 @@ def get_rta_frec(f_inf: int = 20,
     axes[0].legend()
     axes[0].grid(True, which="both", ls="-")
 
-    axes[1].plot(f, right_F_1, label='Referencia', color='r')
+    axes[1].plot(f_right, right_F, label='Derecho', color='r')
     axes[1].set_xlabel('Frecuencia [Hz]', fontsize=12, color='black')
     axes[1].set_xscale('log')
     for axis in [axes[1].xaxis]:
@@ -216,4 +233,4 @@ def get_rta_frec(f_inf: int = 20,
 
     plt.tight_layout()
     plt.show()
-    plt.savefig('test_images/rta_frec.png')
+    plt.savefig('results/test_images/rta_frec.png')

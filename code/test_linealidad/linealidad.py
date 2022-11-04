@@ -5,6 +5,9 @@ import sys
 from scipy.fft import rfft, rfftfreq
 
 #Recomendable: calibrar los tonos a 65 dBHL
+def RMS(y):
+    """ Calcula el valor RMS de una señal """
+    return np.sqrt(np.mean(y**2))
 
 def linealidad_aerea(cal: list[float], data: np.ndarray, sr: int, auricular: str) -> pd.DataFrame:
     """Esta función hace el cálculo de linealidad. Primero todo todo el audio grabado y lo
@@ -53,18 +56,20 @@ def linealidad_aerea(cal: list[float], data: np.ndarray, sr: int, auricular: str
 
     for key in trimm.keys(): #Guardo el valor de la fft
 
+        trimm_global_dB[key.split('_')[0]].append(20*np.log10(RMS(trimm[key]) / (20*10**(-6)) + sys.float_info.epsilon ))
+
         # Number of samples in normalized_tone
-        N = len(trimm[key])
+        #N = len(trimm[key])
 
         # Note the extra 'r' at the front
-        yf = np.abs(np.array(rfft(trimm[key]))) / (N/np.sqrt(2)) #Divido por N/raiz(2) para compensar la amplitud de la fft
-        xf = rfftfreq(N, 1 / sr)
+        #yf = np.abs(np.array(rfft(trimm[key]))) / N #(np.sqrt(N/2)) #Divido por N/raiz(2) para compensar la amplitud de la fft
+        #xf = rfftfreq(N, 1 / sr)
 
-        yf_db = 20*np.log10(yf / (20*10**(-6)) + sys.float_info.epsilon)
+        #yf_db = 20*np.log10(yf / (20*10**(-6)) + sys.float_info.epsilon)
 
-        idx = np.where(xf == int(key.split('_')[0]))[0]
+        #idx = np.where(xf == int(key.split('_')[0]))[0]
 
-        trimm_global_dB[key.split('_')[0]].append(yf_db[idx])
+        #trimm_global_dB[key.split('_')[0]].append(yf_db[idx])
 
 
     supraural_comp = {'125': 45,
@@ -96,11 +101,11 @@ def linealidad_aerea(cal: list[float], data: np.ndarray, sr: int, auricular: str
     for key in trimm_global_dB.keys():
         if auricular == 'Supraural (ej: JBL600)':
             for i in range(len(trimm_global_dB[key])):
-                aux.append(np.round_(trimm_global_dB[key][i] - supraural_comp[key])[0])
+                aux.append(np.round_(trimm_global_dB[key][i] - supraural_comp[key]))
             trimm_global_dB_norm[key+' Hz'] = aux
         elif auricular == "Circumaural (ej: JBL750)":
             for i in range(len(trimm_global_dB[key])):
-                aux.append(np.round_(trimm_global_dB[key][i] - circumaural_comp[key])[0])
+                aux.append(np.round_(trimm_global_dB[key][i] - circumaural_comp[key]))
             trimm_global_dB_norm[key+' Hz'] = aux
         else:
             raise TypeError("No cargaste ningún auricular")
@@ -125,7 +130,7 @@ def linealidad_osea(cal: list[float], data: np.ndarray, sr: int) -> pd.DataFrame
     frec = [250, 500, 750, 1000, 1500, 2000, 3000, 4000] #Frequencies to analyze
 
     #Creo diccionarios con los audios grabados, la key de cada diccionario es la frecuencia grabada
-    audios = {}
+    audios: dict[str, np.ndarray] = {}
     
     i=0
     recorte = int(9*2*sr) #[pasos][segundos_grabacion][sr] = [muestras_por_frecuencia] 
@@ -136,7 +141,7 @@ def linealidad_osea(cal: list[float], data: np.ndarray, sr: int) -> pd.DataFrame
         i+=recorte
     
     #Recorto los audios en partes de dos segundos
-    i=0
+    i: int = 0
     trimm: dict[str, np.ndarray] = {}
     for key in audios.keys():
         n_cut = round(len(audios[key])/(sr*2),0) #cantidad de cortes
@@ -160,18 +165,20 @@ def linealidad_osea(cal: list[float], data: np.ndarray, sr: int) -> pd.DataFrame
 
     for key in trimm.keys(): #Guardo el valor de la fft
 
+        trimm_global_dB[key.split('_')[0]].append(20*np.log10(RMS(trimm[key]) / (20*10**(-6)) + sys.float_info.epsilon ))
+
         # Number of samples in normalized_tone
-        N = len(trimm[key])
+        #N = len(trimm[key])
 
         # Note the extra 'r' at the front
-        yf = np.abs(np.array(rfft(trimm[key]))) / (N/np.sqrt(2)) #Divido por N/raiz(2) para compensar la amplitud de la fft
-        xf = rfftfreq(N, 1 / sr)
+        #yf = np.abs(np.array(rfft(trimm[key]))) / N #(np.sqrt(N/2)) #Divido por N/raiz(2) para compensar la amplitud de la fft
+        #xf = rfftfreq(N, 1 / sr)
 
-        yf_db = 20*np.log10(yf / (20*10**(-6)) + sys.float_info.epsilon)
+        #yf_db = 20*np.log10(yf / (20*10**(-6)) + sys.float_info.epsilon)
 
-        idx = np.where(xf == int(key.split('_')[0]))[0]
+        #idx = np.where(xf == int(key.split('_')[0]))[0]
 
-        trimm_global_dB[key.split('_')[0]].append(yf_db[idx])
+        #trimm_global_dB[key.split('_')[0]].append(yf_db[idx])
 
     
     osea_comp = {'250': 8.4,
@@ -188,7 +195,7 @@ def linealidad_osea(cal: list[float], data: np.ndarray, sr: int) -> pd.DataFrame
     for key in trimm_global_dB.keys():
 
         for i in range(len(trimm_global_dB[key])):
-            aux.append(np.round_(trimm_global_dB[key][i] - osea_comp[key])[0])
+            aux.append(np.round_(trimm_global_dB[key][i] - osea_comp[key]))
         trimm_global_dB_norm[key+' Hz'] = aux
         
         aux = []

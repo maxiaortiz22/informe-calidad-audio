@@ -1,18 +1,10 @@
-#import code.test_linealidad.linelidad as linealidad
-#from code.test_nivel_vocal.nivel_vocal import 
-#import code.test_pulse_tone.pulse_tone as pulse_tone
-#from code.test_respuesta_en_frecuencia.rta_frec import
-#from code.test_ruido.ruido import
-#from code.informe.informe import
-#from code.record_audio import *
-
-
 import code.audio_tests as audio_tests
 import customtkinter
 from tkinter import *
 from code.informe import informe
+from code.test_warble_tone.warble_tone import FcError
 
-def calibracion():
+def calibracion() -> None:
     #Especifico el auricular a utilizar:
     auricular = tipo_auricular.get()
     tests.set_auricular(auricular)
@@ -20,7 +12,7 @@ def calibracion():
     #Genero la calibración:
     tests.record_calibration()
 
-def linealidad_aerea():
+def linealidad_aerea() -> None:
 
     global result_linealidad_aerea
 
@@ -30,7 +22,7 @@ def linealidad_aerea():
 
     result_linealidad_aerea = tests.get_linealidad_aerea()
 
-def linealidad_osea():
+def linealidad_osea() -> None:
 
     global result_linealidad_osea
 
@@ -40,7 +32,7 @@ def linealidad_osea():
 
     result_linealidad_osea = tests.get_linealidad_osea()
 
-def tono_pulsante():
+def tono_pulsante() -> None:
 
     global reslut_tono_pulsante
 
@@ -50,7 +42,7 @@ def tono_pulsante():
 
     reslut_tono_pulsante = tests.get_pulse_tone()
 
-def warble_tone():
+def warble_tone() -> None:
 
     global result_warble_tone
 
@@ -60,7 +52,7 @@ def warble_tone():
 
     result_warble_tone = tests.get_warble_tone()
 
-def nivel_vocal():
+def nivel_vocal() -> None:
 
     global result_nivel_vocal
 
@@ -70,7 +62,7 @@ def nivel_vocal():
 
     result_nivel_vocal = tests.get_nivel_vocal()
 
-def ruido():
+def ruido() -> None:
 
     global result_ruido
 
@@ -80,15 +72,25 @@ def ruido():
 
     result_ruido = tests.get_ruido()
 
-def gen_informe():
-    pass
+def gen_informe() -> None:
+
+    #result_linealidad_aerea = None
+    #result_linealidad_osea = None
+    #reslut_tono_pulsante = None
+    #result_warble_tone = None
+    #result_nivel_vocal = None
+    #result_ruido = None
+    
+    informe.gen_informe(result_linealidad_aerea,
+                        result_linealidad_osea,
+                        reslut_tono_pulsante,
+                        result_warble_tone,
+                        result_nivel_vocal,
+                        result_ruido)
+                        
+    print('Informe generado!')
 
 if __name__ == '__main__':
-
-    #linealidad.linealidad2()
-    #linealidad.linealidad3()
-
-    #pulse_tone.test()
 
     #Instancio la clase con los tests:
     sr = 44100
@@ -101,7 +103,7 @@ if __name__ == '__main__':
 
     root = customtkinter.CTk()
     root.title("Informe de pruebas de audio")
-    root.geometry("330x600")
+    root.geometry("330x560")
     root.iconbitmap('logo.ico')
 
     recomendacion0 = customtkinter.CTkLabel(root, text='Seleccione el tipo de auricular:')
@@ -119,11 +121,11 @@ if __name__ == '__main__':
     recomendacion1 = customtkinter.CTkLabel(root, text='Pruebas:')
     recomendacion1.grid(row=6, column=0, pady=5, padx=50)
 
-    record_linelidad_aerea = customtkinter.CTkButton(root, text="Linealidad aérea", command=linealidad_aerea)
-    record_linelidad_aerea.grid(row=7, column=0, pady=5, padx=50)
-
     record_linelidad_osea = customtkinter.CTkButton(root, text="Linealidad ósea", command=linealidad_osea)
-    record_linelidad_osea.grid(row=8, column=0, pady=5, padx=50)
+    record_linelidad_osea.grid(row=7, column=0, pady=5, padx=50)
+
+    record_linelidad_aerea = customtkinter.CTkButton(root, text="Linealidad aérea", command=linealidad_aerea)
+    record_linelidad_aerea.grid(row=8, column=0, pady=5, padx=50)
 
     record_tono_pulsante = customtkinter.CTkButton(root, text="Tono pulsante", command=tono_pulsante)
     record_tono_pulsante.grid(row=9, column=0, pady=5, padx=50)
@@ -147,13 +149,7 @@ if __name__ == '__main__':
     progress.grid(row=14, column=0, pady=5, padx=50)
     progress.set(0)
 
-    file_name_recomendacion = customtkinter.CTkLabel(root, text='Nombre del informe:')
-    file_name_recomendacion.grid(row=15, column=0, pady=5, padx=50)
-
-    file_name_entry = customtkinter.CTkEntry(root, justify=LEFT, textvariable='Nombre del informe')
-    file_name_entry.grid(row=16, column=0, pady=5, padx=50)
-
     calculate = customtkinter.CTkButton(root, text="Informe", command=gen_informe)
-    calculate.grid(row=17, column=0, pady=5, padx=50)
+    calculate.grid(row=15, column=0, pady=5, padx=50)
 
     root.mainloop()

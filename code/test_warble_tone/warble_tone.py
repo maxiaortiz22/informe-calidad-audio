@@ -33,15 +33,15 @@ def get_frec_mod(data: list[np.ndarray], fs: float) -> pd.DataFrame:
 
         yf = 20 * np.log10(np.abs(yf) / np.max(np.abs(yf)))
 
-        local_max_idx, _ = find_peaks(yf, height=-100) #Revisar el valor de height
+        local_max_idx, _ = find_peaks(yf, height=-15) #Revisar el valor de height
 
         xf_max_list = [xf[i] for i in local_max_idx]
 
         fm_calc = []
-        for i in range(len(xf_max_list)-1):
-            fm_calc.append(xf_max_list[i+1]-xf_max_list[i])
+        for t in range(len(xf_max_list)-1):
+            fm_calc.append(xf_max_list[t+1]-xf_max_list[t])
 
-        fm_calc = list(set(fm_calc))[0]
+        fm_calc = np.min(list(set(fm_calc)))#[0] #ESTO ESTÁ FUNCIONANDO MAL, VA A HABER QUE HACER UN CAMBIO Y QUEDARSE SOLO CON LAS CERCANAS A LA BANDA EN CUESTIÓN, SINO TOMA OTROS SALTOS!!!!
 
         check_fc = map(lambda frec: frec == frecs[i], xf_max_list)
 
@@ -49,7 +49,8 @@ def get_frec_mod(data: list[np.ndarray], fs: float) -> pd.DataFrame:
             fc.append(frecs[i])
         
         else:
-            raise FcError(f'no se encontró la frecuencia de mensaje de {frecs[i]} Hz')
+            #raise FcError(f'no se encontró la frecuencia de mensaje de {frecs[i]} Hz')
+            fc.append(np.nan)
         
         fm.append(fm_calc)
 
@@ -57,5 +58,7 @@ def get_frec_mod(data: list[np.ndarray], fs: float) -> pd.DataFrame:
                'Modulating frequency [Hz]': fm}
 
     df = pd.DataFrame(data_df)
+
+    print(df)
 
     return df

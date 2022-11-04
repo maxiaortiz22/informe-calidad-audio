@@ -11,22 +11,23 @@ from .test_ruido import ruido
 from .test_warble_tone import warble_tone
 from .test_nivel_vocal import nivel_vocal
 import time
+import pandas as pd
 
 class Tests():
     def __init__(self, sr):
 
         #Parámetros del detector de silencio:
-        self.THRESHOLD = 30#30 #500 el original
-        self.CHUNK_SIZE_silence = 128
+        self.THRESHOLD: int = 20#30 #500 el original
+        self.CHUNK_SIZE_silence: int = 128
         self.FORMAT_silence = pyaudio.paInt32
-        self.RATE_silence = 22050
+        self.RATE_silence: int = 22050
 
         #Parámetros para los tests:
         self.sr = sr
-        self.cal = []
-        self.auricular = ''
-        self.freqs_auri = [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000]
-        self.freqs_osea = [250, 500, 750, 1000, 1500, 2000, 3000, 4000]
+        self.cal: list = []
+        self.auricular: str = ''
+        self.freqs_auri: list = [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000]
+        self.freqs_osea: list = [250, 500, 750, 1000, 1500, 2000, 3000, 4000]
 
     def set_auricular(self, auricular: str) -> None:
         self.auricular = auricular
@@ -37,13 +38,13 @@ class Tests():
     def record_calibration(self) -> None:
 
         #Compensaciones:
-        supraural_comp = [45, 27, 13.5, 9, 7.5, 7.5, 9, 11.5, 12, 16, 15.5]
-        circumaural_comp = [30.5, 18, 11, 6,  5.5, 5.5, 4.5, 2.5, 9.5, 17, 17.5]
-        osea_comp = [250, 500, 750, 1000, 1500, 2000, 3000, 4000]
+        supraural_comp: list = [45, 27, 13.5, 9, 7.5, 7.5, 9, 11.5, 12, 16, 15.5]
+        circumaural_comp: list = [30.5, 18, 11, 6,  5.5, 5.5, 4.5, 2.5, 9.5, 17, 17.5]
+        osea_comp: list = [8.4, 9.8, 11.2, 11.6, 13.5, 13.6, 16.3, 25]
 
         #Niveles de referencia:
-        NIVEL_DBHL_AURI = 65
-        NIVEL_DBHL_OSEA = 30
+        NIVEL_DBHL_AURI: int = 65
+        NIVEL_DBHL_OSEA: int = 30
 
         cal = []
 
@@ -107,7 +108,7 @@ class Tests():
     def get_linealidad_aerea(self):
         
         #AGREGAR UN TIEMPO DE ESPERA ENTRE FRECUENCIA Y FRECUENCIA EN ESTE ESTUDIO TAMBIÉN!
-        record_seconds = 9*2 #[pasos]*[segundos]
+        record_seconds: int = 9*2 #[pasos]*[segundos]
 
         data = np.array([])
 
@@ -127,7 +128,7 @@ class Tests():
         
     def get_linealidad_osea(self):
 
-        record_seconds = 9*2 #[pasos]*[segundos]
+        record_seconds: int = 9*2 #[pasos]*[segundos]
 
         data = np.array([])
 
@@ -144,7 +145,7 @@ class Tests():
 
         return result
     
-    def get_pulse_tone(self) -> dict[str, float]:
+    def get_pulse_tone(self) -> pd.DataFrame:
 
         record_seconds = 5
 
@@ -166,7 +167,7 @@ class Tests():
 
         rta_frec.get_rta_frec(f_inf=20, f_sup=20000, T=5, Fs=self.sr, A=1, P=3)
 
-        print('Gráfico guardado: test_images/rta_frec.png')
+        print('Gráfico guardado: results/test_images/rta_frec.png')
 
     def get_ruido(self):
 
@@ -183,7 +184,7 @@ class Tests():
             
             data.append(data_aux)
 
-            time.sleep(5)
+            time.sleep(10)
         
         result = ruido.get_ruido(data, self.cal[4], self.sr)
 
@@ -217,7 +218,7 @@ class Tests():
                  'SRT E IRF (femenino)', 'Audicom']
 
         for lista in listas:
-            print(f'Esperando: lista {lista} Hz a 85 dBHL')
+            print(f'Esperando: lista {lista} a 85 dBHL')
             data_aux = self.record(RECORD_SECONDS=record_seconds, CHANNELS=1)
             
             print('Lista grabada!')
@@ -281,5 +282,7 @@ class Tests():
 
         myrecording = sd.rec(int(RECORD_SECONDS * self.sr), samplerate=self.sr,
                         channels=CHANNELS, blocking=True, dtype='float32')
+        
+        sd.wait()
 
         return myrecording.flatten()
