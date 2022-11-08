@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import sys
 from scipy.fft import rfft, rfftfreq
+from .filtros import BandpassFilter
 
 #Recomendable: calibrar los tonos a 65 dBHL
 def RMS(y):
@@ -17,6 +18,10 @@ def linealidad_aerea(cal: list[float], data: np.ndarray, sr: int, auricular: str
 
     frec = [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000] #Frequencies to analyze
 
+    bpfilter = BandpassFilter('octave band', sr, 10, frec) #Instancio la clase de los filtros
+
+    filtered_data = bpfilter.filtered_signals(data)
+
     #Creo diccionarios con los audios grabados, la key de cada diccionario es la frecuencia grabada
     audios = {}
     
@@ -24,7 +29,7 @@ def linealidad_aerea(cal: list[float], data: np.ndarray, sr: int, auricular: str
     recorte = int(9*2*sr) #[pasos][segundos_grabacion][sr] = [muestras_por_frecuencia] no sera 12?
     for cal_i, f in enumerate(frec):
         #Separo la data por frecuencia y los calibro a dBSPL:
-        audios[str(f)] = data[int(i) : int(i + recorte)] / cal[cal_i] #calibration
+        audios[str(f)] = filtered_data[cal_i][int(i) : int(i + recorte)] / cal[cal_i] #calibration
 
         i+=recorte
     
@@ -129,6 +134,9 @@ def linealidad_osea(cal: list[float], data: np.ndarray, sr: int) -> pd.DataFrame
 
     frec = [250, 500, 750, 1000, 1500, 2000, 3000, 4000] #Frequencies to analyze
 
+    bpfilter = BandpassFilter('octave band', sr, 10, frec) #Instancio la clase de los filtros
+    filtered_data = bpfilter.filtered_signals(data)
+
     #Creo diccionarios con los audios grabados, la key de cada diccionario es la frecuencia grabada
     audios: dict[str, np.ndarray] = {}
     
@@ -136,7 +144,7 @@ def linealidad_osea(cal: list[float], data: np.ndarray, sr: int) -> pd.DataFrame
     recorte = int(9*2*sr) #[pasos][segundos_grabacion][sr] = [muestras_por_frecuencia] 
     for cal_i, f in enumerate(frec):
         #Separo la data por frecuencia y los calibro a dBSPL:
-        audios[str(f)] = data[int(i) : int(i + recorte)] / cal[cal_i] #calibration
+        audios[str(f)] = filtered_data[cal_i][int(i) : int(i + recorte)] / cal[cal_i] #calibration
 
         i+=recorte
     

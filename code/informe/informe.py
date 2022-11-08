@@ -28,7 +28,8 @@ def gen_informe(result_linealidad_aerea,
                 reslut_tono_pulsante,
                 result_warble_tone,
                 result_nivel_vocal,
-                result_ruido):
+                result_ruido,
+                result_on_off):
 
     # Instantiation of inherited class
     pdf = PDF()
@@ -239,13 +240,56 @@ def gen_informe(result_linealidad_aerea,
 
     pdf.cell(90, 5, ' ', 0, 2, 'C')
 
-    #Test de respuesta en frecuencia:
+    #Test de encendido/apagado:
     pdf.add_page()
 
     pdf.set_font('Times', 'U', 14)
-    pdf.cell(0, 5, f'Test de respuesta en frecuencia: (A venir)', 0, 1, 'L')
+    pdf.cell(0, 5, f'Test de encendido/apagado del tono', 0, 1, 'L')
     pdf.set_font('Times', '', 12)
     pdf.cell(0, 5, '', 0, 1, 'L')
+
+    pdf.multi_cell(w=0, h=5, 
+                   txt='Para este test se busca encontrar los tiempos de encendido y apagado al reproducir un tono con ' + 
+                       'el test de aéreo.',
+                   border=0, fill=False, align='J')
+    pdf.cell(0, 5, '', 0, 1, 'L')
+
+    w_firt_col = 25
+    w = 25
+    h = 7
+
+    columnNameList = list(result_on_off.columns)
+    totColumns = len(columnNameList)
+
+    w_len = w_firt_col + w*(totColumns-2)
+
+    i=0
+    for header in columnNameList[:-1]:
+        if i%totColumns == 0:
+            pdf.cell(w_firt_col, h, header, 1, 0, 'C')
+            i+=1
+        else:
+            pdf.cell(w, h, header, 1, 0, 'C')
+            i+=1
+    pdf.cell(w, h, columnNameList[-1], 1, 2, 'C')
+    pdf.cell(-1*(w_len))
+    pdf.set_font('arial', '', 11)
+
+    i=0
+    for row in range(0, len(result_on_off)):
+        for col_num, col_name in enumerate(columnNameList):
+            if col_num != len(columnNameList)-1:
+                if col_num==0:
+                    pdf.cell(w_firt_col,h, str(result_on_off['%s' % (col_name)].iloc[row]), 1, 0, 'C')
+                else:
+                    pdf.cell(w,h, str(result_on_off['%s' % (col_name)].iloc[row]), 1, 0, 'C')
+            else:
+                pdf.cell(w,h, str(result_on_off['%s' % (col_name)].iloc[row]), 1, 2, 'C')
+                pdf.cell(-1*(w_len))
+
+    pdf.cell(90, 5, ' ', 0, 2, 'C')
+
+    pdf.image('results/test_images/on_off_tono.png', x=None, y=None, w=0, h=0, type='', link='')
 
     #Test de ruido:
     pdf.add_page()
@@ -319,7 +363,7 @@ def gen_informe(result_linealidad_aerea,
     pdf.cell(0, 5, '', 0, 1, 'L')
 
     w_firt_col = 51
-    w = 45
+    w = 51
     h = 7
 
     columnNameList = list(result_warble_tone.columns)

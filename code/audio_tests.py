@@ -10,6 +10,7 @@ from .test_respuesta_en_frecuencia import rta_frec
 from .test_ruido import ruido
 from .test_warble_tone import warble_tone
 from .test_nivel_vocal import nivel_vocal
+from .test_on_off import on_off
 import time
 import pandas as pd
 
@@ -230,6 +231,20 @@ class Tests():
         result = nivel_vocal.get_nivel_vocal(data, self.cal[4])
 
         return result
+    
+    def get_on_off_time(self):
+
+        record_seconds = 7
+
+        print(f'Se grabaran {record_seconds} s de audio, en este tiempo tiene que encender y apagar el tono en 60 dBHL')
+
+        myrecording = sd.rec(int(record_seconds * self.sr), samplerate=self.sr,
+                        channels=1, blocking=True, dtype='float32') 
+        sd.wait()
+
+        myrecording = myrecording.flatten()
+
+        return on_off.get_on_off_time(myrecording, self.sr)
 
     def RMS(self, y):
         """ Calcula el valor RMS de una señal """
