@@ -6,11 +6,18 @@ import sys
 from scipy.fft import rfft, rfftfreq
 import pandas as pd
 
-def get_ruido(data: list[np.ndarray], cal: float, sr: float) -> pd.DataFrame:
-    
+def get_ruido(data: list[np.ndarray], cal: float, sr: float, auricular: str) -> pd.DataFrame:
+
     ruidos = [ruido/cal for ruido in data]
 
+    if auricular == 'Supraural (ej: JBL600)':
+        comp = [20, 20, 13.5]
+    elif auricular == "Circumaural (ej: JBL750)":
+        comp = [20, 20, 11.5]
+
     niveles = list(map(lambda x: np.round(20*np.log10(np.sqrt(np.mean(x**2)) / (20*10**(-6)) + sys.float_info.epsilon), 2), ruidos))
+
+    niveles = [niveles[i] - val for i, val in enumerate(comp)]
 
     ruidos_dB = []
     for ruido in ruidos:
@@ -27,6 +34,9 @@ def get_ruido(data: list[np.ndarray], cal: float, sr: float) -> pd.DataFrame:
     ftick = [20, 31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000, 20000]
     labels = ['20', '31.5', '63', '125', '250', '500', '1k', '2k', '4k', '8k', '16k', '20k']
 
+    plt.cla()
+    plt.clf()
+
     for i, noise_type in enumerate(noise_types):
         fig, ax = plt.subplots(figsize=(5, 4))
         ax.plot(ruidos_dB[i][0], ruidos_dB[i][1], label=noise_type)
@@ -42,14 +52,10 @@ def get_ruido(data: list[np.ndarray], cal: float, sr: float) -> pd.DataFrame:
 
         plt.savefig(f'results/test_images/{noise_type}.png')
 
-    data_ = {'Tipo': noise_types,'Nivel [dBSPL]': niveles}
+    data_ = {'Tipo': noise_types,'Nivel [dBHL]': niveles}
 
     df = pd.DataFrame(data=data_)
 
     print(df)
     
     return df
-        
-    
-
-

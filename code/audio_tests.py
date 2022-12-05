@@ -28,7 +28,7 @@ class Tests():
         self.cal: list = []
         self.auricular: str = ''
         self.freqs_auri: list = [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000]
-        self.freqs_osea: list = [250, 500, 750, 1000, 1500, 2000, 3000, 4000]
+        self.freqs_osea: list = [125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000]
 
     def set_auricular(self, auricular: str) -> None:
         self.auricular = auricular
@@ -41,7 +41,7 @@ class Tests():
         #Compensaciones:
         supraural_comp: list = [45, 27, 13.5, 9, 7.5, 7.5, 9, 11.5, 12, 16, 15.5]
         circumaural_comp: list = [30.5, 18, 11, 6,  5.5, 5.5, 4.5, 2.5, 9.5, 17, 17.5]
-        osea_comp: list = [8.4, 9.8, 11.2, 11.6, 13.5, 13.6, 16.3, 25]
+        osea_comp: list = [0, 8.4, 9.8, 11.2, 11.6, 13.5, 13.6, 16.3, 25, 0, 0]
 
         #Niveles de referencia:
         NIVEL_DBHL_AURI: int = 65
@@ -187,7 +187,7 @@ class Tests():
 
             time.sleep(10)
         
-        result = ruido.get_ruido(data, self.cal[4], self.sr)
+        result = ruido.get_ruido(data, self.cal[4], self.sr, self.auricular)
 
         return result
 

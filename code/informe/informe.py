@@ -300,7 +300,7 @@ def gen_informe(result_linealidad_aerea,
     pdf.cell(0, 5, '', 0, 1, 'L')
 
     pdf.multi_cell(w=0, h=5, 
-                   txt='Para este test se graban a 70 dBHL 3 tipos de ruido: Blanco, Vocal y NBN a 1kHz. ' + 
+                   txt='Para este test se graban a 60 dBHL 3 tipos de ruido: Blanco, Vocal y NBN a 1kHz. ' + 
                        'Para su representación, se observa una tabla con los valores obtenidos y la ' +
                        'respuesta en frecuencia de cada uno.',
                    border=0, fill=False, align='J')

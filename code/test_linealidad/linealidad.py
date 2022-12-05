@@ -132,6 +132,8 @@ def linealidad_osea(cal: list[float], data: np.ndarray, sr: int) -> pd.DataFrame
     calculo de linealidad. Luego tengo que saber cuánto es el máximo y el mínimo de nivel medido
     para crear el cuadro de linealidad"""
 
+    data = data[int(9*2*sr):int(len(data)-9*2*sr)*2] #recorto las bandas de 125, 6 y 8k Hz
+
     frec = [250, 500, 750, 1000, 1500, 2000, 3000, 4000] #Frequencies to analyze
 
     bpfilter = BandpassFilter('octave band', sr, 10, frec) #Instancio la clase de los filtros
