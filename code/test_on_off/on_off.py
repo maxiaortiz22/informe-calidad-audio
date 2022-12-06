@@ -56,6 +56,9 @@ def get_on_off_time(data: np.ndarray, sr: int) -> pd.DataFrame:
     data_ = {'Tiempos [ms]': ['On time', 'Off time'],
              'Resultado': [times['On time [ms]'], times['Off time [ms]']]}
 
+    plt.cla()
+    plt.clf()
+
     plt.rcParams["figure.figsize"] = (5,3)
 
     plt.plot(tono)

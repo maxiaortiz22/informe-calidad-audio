@@ -68,6 +68,9 @@ def get_pulse_tone(data: np.ndarray, sr: int) -> pd.DataFrame:
     data_ = {'Tiempos [ms]': ['Rise time', 'Fall time', 'On time', 'On/Off time'],
              'Resultado': [times['Rise time [ms]'], times['Fall time [ms]'], times['On time [ms]'], times['On/Off time [ms]']]}
     
+    plt.cla()
+    plt.clf()
+
     plt.rcParams["figure.figsize"] = (5,3)
 
     plt.plot(tono)
