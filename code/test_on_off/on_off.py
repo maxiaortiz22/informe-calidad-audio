@@ -59,13 +59,14 @@ def get_on_off_time(data: np.ndarray, sr: int) -> pd.DataFrame:
     plt.cla()
     plt.clf()
 
-    plt.rcParams["figure.figsize"] = (5,3)
+    #plt.rcParams["figure.figsize"] = (5,3)
 
-    plt.plot(tono)
+    #plt.plot(tono)
+    fig, ax = plt.subplots(figsize=(5, 4))
     
     for idx in [end_left, end_right, max_left, max_right]:
 
-        plt.vlines(x = idx, ymin = min(tono), ymax = max(tono), colors = 'purple')
+        ax.vlines(x = idx, ymin = min(tono), ymax = max(tono), colors = 'purple')
 
     plt.savefig('results/test_images/on_off_tono.png')
 

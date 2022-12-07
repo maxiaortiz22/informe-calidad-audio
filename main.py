@@ -166,13 +166,20 @@ def gen_informe() -> None:
     global progress_label
     global root
 
+    version_app = input('Versión de la app utilizada: ')
+    celular = input('Dispositivo usado en la prueba: ')
+    calibracion_usada = input('Calibración utilizada: ')
+
     informe.gen_informe(result_linealidad_aerea,
                         result_linealidad_osea,
                         reslut_tono_pulsante,
                         result_warble_tone,
                         result_nivel_vocal,
                         result_ruido,
-                        result_on_off)
+                        result_on_off,
+                        version_app,
+                        celular,
+                        calibracion_usada)
 
     progress.set(1)
     progress_label.set(f"Informe generado!")

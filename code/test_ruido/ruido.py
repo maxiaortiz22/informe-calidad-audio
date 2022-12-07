@@ -17,7 +17,7 @@ def get_ruido(data: list[np.ndarray], cal: float, sr: float, auricular: str) -> 
 
     niveles = list(map(lambda x: np.round(20*np.log10(np.sqrt(np.mean(x**2)) / (20*10**(-6)) + sys.float_info.epsilon), 2), ruidos))
 
-    niveles = [niveles[i] - val for i, val in enumerate(comp)]
+    niveles = [np.round(niveles[i] - val, 2) for i, val in enumerate(comp)]
 
     ruidos_dB = []
     for ruido in ruidos:

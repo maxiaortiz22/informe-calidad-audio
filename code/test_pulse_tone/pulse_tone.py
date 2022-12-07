@@ -71,15 +71,18 @@ def get_pulse_tone(data: np.ndarray, sr: int) -> pd.DataFrame:
     plt.cla()
     plt.clf()
 
-    plt.rcParams["figure.figsize"] = (5,3)
+    #plt.rcParams["figure.figsize"] = (5,4)
 
-    plt.plot(tono)
+    #plt.plot(tono)
+    fig, ax = plt.subplots(figsize=(5, 4))
     
     for idx in [first_rise_min_left, first_rise_max_left, first_fall_min_left, 
                 first_fall_middle_left, first_fall_max_left, second_rise_min_left, second_rise_middle_left]:
 
-        plt.vlines(x = idx, ymin = min(tono), ymax = max(tono), colors = 'purple')
+        ax.vlines(x = idx, ymin = min(tono), ymax = max(tono), colors = 'purple')
 
+    plt.tight_layout()
+    
     plt.savefig('results/test_images/pulse_tone.png')
 
     df = pd.DataFrame(data=data_)

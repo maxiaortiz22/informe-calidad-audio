@@ -29,7 +29,10 @@ def gen_informe(result_linealidad_aerea,
                 result_warble_tone,
                 result_nivel_vocal,
                 result_ruido,
-                result_on_off):
+                result_on_off,
+                version_app,
+                celular,
+                calibracion_usada):
 
     # Instantiation of inherited class
     pdf = PDF()
@@ -41,6 +44,12 @@ def gen_informe(result_linealidad_aerea,
     pdf.cell(0, 5, f'Informe generado el {e.strftime("%d-%m-%Y %H:%M:%S")}', 0, 1, 'L')
 
     pdf.set_font('Times', '', 12)
+    pdf.cell(0, 5, '', 0, 1, 'L')
+
+    pdf.cell(0, 5, f'Versión de la app analizada: {version_app}', 0, 1, 'L')
+    pdf.cell(0, 5, f'Dispositivo movil utilizado: {celular}', 0, 1, 'L')
+    pdf.cell(0, 5, f'Calibración utilizada: {calibracion_usada}', 0, 1, 'L')
+
     pdf.cell(0, 5, '', 0, 1, 'L')
 
     #Test linealidad aérea:
