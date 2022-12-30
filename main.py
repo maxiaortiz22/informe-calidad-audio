@@ -169,6 +169,7 @@ def gen_informe() -> None:
     version_app = input('Versión de la app utilizada: ')
     celular = input('Dispositivo usado en la prueba: ')
     calibracion_usada = input('Calibración utilizada: ')
+    id_informe = input('ID del informe: ')
 
     informe.gen_informe(result_linealidad_aerea,
                         result_linealidad_osea,
@@ -179,7 +180,8 @@ def gen_informe() -> None:
                         result_on_off,
                         version_app,
                         celular,
-                        calibracion_usada)
+                        calibracion_usada,
+                        id_informe)
 
     progress.set(1)
     progress_label.set(f"Informe generado!")

@@ -63,6 +63,8 @@ def get_on_off_time(data: np.ndarray, sr: int) -> pd.DataFrame:
 
     #plt.plot(tono)
     fig, ax = plt.subplots(figsize=(5, 4))
+
+    ax.plot(tono)
     
     for idx in [end_left, end_right, max_left, max_right]:
 

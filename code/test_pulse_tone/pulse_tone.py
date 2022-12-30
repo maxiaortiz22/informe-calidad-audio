@@ -75,6 +75,8 @@ def get_pulse_tone(data: np.ndarray, sr: int) -> pd.DataFrame:
 
     #plt.plot(tono)
     fig, ax = plt.subplots(figsize=(5, 4))
+
+    ax.plot(tono)
     
     for idx in [first_rise_min_left, first_rise_max_left, first_fall_min_left, 
                 first_fall_middle_left, first_fall_max_left, second_rise_min_left, second_rise_middle_left]:
